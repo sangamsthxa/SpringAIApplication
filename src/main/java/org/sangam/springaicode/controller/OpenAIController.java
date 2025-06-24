@@ -1,6 +1,11 @@
 package org.sangam.springaicode.controller;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +19,22 @@ public class OpenAIController {
     private OpenAiChatModel openAiChatModel;
     private ChatClient chatClient;
 
-    public OpenAIController(OpenAiChatModel openAiChatModel) {
-        this.openAiChatModel = openAiChatModel;
-        this.chatClient = ChatClient.create(openAiChatModel);
+    public OpenAIController(ChatClient.Builder builder) {
+       // this.openAiChatModel = openAiChatModel;
+        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                .maxMessages(10)  // Only remember last 10 messages (excluding system)
+                .build();
+
+
+        MessageChatMemoryAdvisor advisor = MessageChatMemoryAdvisor
+                .builder(chatMemory)
+                .conversationId("my-session")  // Optional: set default session id
+                .build();
+
+        this.chatClient = builder
+                .defaultAdvisors(advisor)
+                .build();
     }
 
     @GetMapping("/api/{message}")
