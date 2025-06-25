@@ -7,11 +7,14 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 public class OpenAIController {
@@ -19,23 +22,27 @@ public class OpenAIController {
    // private OpenAiChatModel openAiChatModel;
     private ChatClient chatClient;
 
-//    public OpenAIController(ChatClient.Builder builder) {
-//       // this.openAiChatModel = openAiChatModel;
-//        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-//                .chatMemoryRepository(new InMemoryChatMemoryRepository())
-//                .maxMessages(10)  // Only remember last 10 messages (excluding system)
-//                .build();
-//
-//
-//        MessageChatMemoryAdvisor advisor = MessageChatMemoryAdvisor
-//                .builder(chatMemory)
-//                .conversationId("my-session")  // Optional: set default session id
-//                .build();
-//
-//        this.chatClient = builder
-//                .defaultAdvisors(advisor)
-//                .build();
-//    }
+    @Autowired
+    private EmbeddingModel embeddingModel;
+
+
+    public OpenAIController(ChatClient.Builder builder) {
+       // this.openAiChatModel = openAiChatModel;
+        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                .maxMessages(10)  // Only remember last 10 messages (excluding system)
+                .build();
+
+
+        MessageChatMemoryAdvisor advisor = MessageChatMemoryAdvisor
+                .builder(chatMemory)
+                .conversationId("my-session")  // Optional: set default session id
+                .build();
+
+        this.chatClient = builder
+                .defaultAdvisors(advisor)
+                .build();
+    }
 
     @GetMapping("/api/{message}")
     public String getAnswer(@PathVariable String message){
@@ -56,6 +63,30 @@ public class OpenAIController {
                 .getText();
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/recommend")
+    public String recommend(@RequestParam String type, @RequestParam String year, @RequestParam String lang){
+        String tempt = """
+                I want to watch a {type} movie tonight with good rating,
+                looking for movies around this year {year}.
+                The language im looking for is {lang}.
+                Suggest one specific movie and tell me the cast and length of the movie.
+                """;
+
+        PromptTemplate promptTemplate = new PromptTemplate(tempt);
+        Prompt prompt = promptTemplate.create(Map.of("type", type, "year", year, "lang", lang));
+
+        String response = chatClient
+                .prompt(prompt)
+                .call()
+                .content();
+        return response;
+    }
+
+    @PostMapping("/api/embedding")
+    public float[] embedding(@RequestParam String text){
+        return embeddingModel.embed(text);
     }
 
 
