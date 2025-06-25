@@ -16,32 +16,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class OpenAIController {
 
-    private OpenAiChatModel openAiChatModel;
+   // private OpenAiChatModel openAiChatModel;
     private ChatClient chatClient;
 
-    public OpenAIController(ChatClient.Builder builder) {
-       // this.openAiChatModel = openAiChatModel;
-        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(10)  // Only remember last 10 messages (excluding system)
-                .build();
-
-
-        MessageChatMemoryAdvisor advisor = MessageChatMemoryAdvisor
-                .builder(chatMemory)
-                .conversationId("my-session")  // Optional: set default session id
-                .build();
-
-        this.chatClient = builder
-                .defaultAdvisors(advisor)
-                .build();
-    }
+//    public OpenAIController(ChatClient.Builder builder) {
+//       // this.openAiChatModel = openAiChatModel;
+//        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+//                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+//                .maxMessages(10)  // Only remember last 10 messages (excluding system)
+//                .build();
+//
+//
+//        MessageChatMemoryAdvisor advisor = MessageChatMemoryAdvisor
+//                .builder(chatMemory)
+//                .conversationId("my-session")  // Optional: set default session id
+//                .build();
+//
+//        this.chatClient = builder
+//                .defaultAdvisors(advisor)
+//                .build();
+//    }
 
     @GetMapping("/api/{message}")
     public String getAnswer(@PathVariable String message){
 
-        String response = openAiChatModel.call(message);
-        return response;
+        //String response = openAiChatModel.call(message);
+        return message;
     }
 
     @GetMapping("/api/chatClient/{message}")
