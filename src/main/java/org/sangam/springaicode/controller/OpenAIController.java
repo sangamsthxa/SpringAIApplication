@@ -3,6 +3,7 @@ package org.sangam.springaicode.controller;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -118,6 +119,16 @@ public class OpenAIController {
     public List<Document> getProducts(@RequestParam String text){
 
         return vectorStore.similaritySearch(text);
+    }
+
+    @PostMapping("/api/ask")
+    public String getAnswerUsingRag(@RequestParam String query) {
+        return chatClient
+                .prompt(query)
+                .advisors(new QuestionAnswerAdvisor(vectorStore))
+                .call()
+                .content();
+
     }
 
 
